@@ -1,3 +1,12 @@
+/*
+WebRTC Gateway
+Author: Junhua Chang
+Email: jc837a@att.com
+Company: AT&T Mobility
+Date: 01-17-2014
+
+This is a WebRTC gateway which implements features listed in AT&T WebRTC NB Spec.
+*/
 
 // create the http server and listen on port
 var server = require('http').createServer();
@@ -7,7 +16,6 @@ var app = server.listen(1337, function() {
 
 // create the socket server on the port
 var io = require('socket.io').listen(app);
-
 
 // This callback function is called every time a socket
 // tries to connect to the server

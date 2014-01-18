@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-  <title>WebRTC App</title>  
+  <title>AT&T WebRTC SDK Sample App</title>  
 </head>
 <body>
-  <h1>WebRTC App</h1>
+  <h1>AT&T WebRTC SDK Sample App</h1>
   <video id="webrtc-sourcevid" autoplay="" style="width: 320px; height: 240px; border: 1px solid black;"></video>
   <button type="button" onclick="startVideo();">Start video</button>
   <button type="button" onclick="stopVideo();">Stop video</button>
@@ -11,159 +11,160 @@
   <button type="button" onclick="connect();">Connect</button>
   <button type="button" onclick="hangUp();">Hang Up</button>
 
-  <p>Run a node.js server and adapt the address in the code.</p>
+  <!-- Run "node gateway.js" to start gateway for development -->
+  <p>Please update gateway address in the code.</p>
   <script src="http://wdev.code-api-att.com:1337/socket.io/socket.io.js"></script>
   <script>
-  // create socket
-      var socket = io.connect('http://wdev.code-api-att.com:1337/');
+    // create websocket / Comet long polling
+    var socket = io.connect('http://wdev.code-api-att.com:1337/');
 
-  var sourcevid = document.getElementById('webrtc-sourcevid');
-  var remotevid = document.getElementById('webrtc-remotevid');
-  var localStream = null;
-  var peerConn = null;
-  var started = false;
-  var channelReady = false;
-  var mediaConstraints = {'mandatory': {
-                          'OfferToReceiveAudio':true, 
-                          'OfferToReceiveVideo':true }};
-  var isVideoMuted = false;
+    var sourcevid = document.getElementById('webrtc-sourcevid');
+    var remotevid = document.getElementById('webrtc-remotevid');
+    var localStream = null;
+    var peerConn = null;
+    var started = false;
+    var channelReady = false;
+    var mediaConstraints = {'mandatory': {
+                            'OfferToReceiveAudio':true, 
+                            'OfferToReceiveVideo':true }};
+    var isVideoMuted = false;
 
-  // get the local video up
-  function startVideo() {
-      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia || navigator.msGetUserMedia;
-      window.URL = window.URL || window.webkitURL;
+    // get the local video up
+    function startVideo() {
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        window.URL = window.URL || window.webkitURL;
 
-      navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
-      function successCallback(stream) {
-          localStream = stream;
-          if (sourcevid.mozSrcObject) {
+        navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
+        function successCallback(stream) {
+            localStream = stream;
+            if (sourcevid.mozSrcObject) {
             sourcevid.mozSrcObject = stream;
             sourcevid.play();
-          } else {
+            } else {
             try {
-              sourcevid.src = window.URL.createObjectURL(stream);
-              sourcevid.play();
+                sourcevid.src = window.URL.createObjectURL(stream);
+                sourcevid.play();
             } catch(e) {
-              console.log("Error setting video src: ", e);
+                console.log("Error setting video src: ", e);
             }
-          }
-      }
-      function errorCallback(error) {
-          console.error('An error occurred: [CODE ' + error.code + ']');
-          return;
-      }
-  }
-
-  // stop local video
-  function stopVideo() {
-    if (sourcevid.mozSrcObject) {
-      sourcevid.mozSrcObject.stop();
-      sourcevid.src = null;
-    } else {
-      sourcevid.src = "";
-      localStream.stop();
+            }
+        }
+        function errorCallback(error) {
+            console.error('An error occurred: [CODE ' + error.code + ']');
+            return;
+        }
     }
-  }
 
-  // send SDP via socket connection
-  function setLocalAndSendMessage(sessionDescription) {
+    // stop local video
+    function stopVideo() {
+    if (sourcevid.mozSrcObject) {
+        sourcevid.mozSrcObject.stop();
+        sourcevid.src = null;
+    } else {
+        sourcevid.src = "";
+        localStream.stop();
+    }
+    }
+
+    // send SDP via socket connection
+    function setLocalAndSendMessage(sessionDescription) {
     peerConn.setLocalDescription(sessionDescription);
     console.log("Sending: SDP");
     console.log(sessionDescription);
     socket.json.send(sessionDescription);
-  }
-
-  function createOfferFailed() {
-    console.log("Create Answer failed");
-  }
-
-  // start the connection upon user request
-  function connect() {
-    if (!started && localStream && channelReady) {
-      createPeerConnection();
-      started = true;
-      peerConn.createOffer(setLocalAndSendMessage, createOfferFailed, mediaConstraints);
-    } else {
-      alert("Local stream not running yet - try again.");
     }
-  }
 
-  // stop the connection upon user request
-  function hangUp() {
+    function createOfferFailed() {
+    console.log("Create Answer failed");
+    }
+
+    // start the connection upon user request
+    function connect() {
+    if (!started && localStream && channelReady) {
+        createPeerConnection();
+        started = true;
+        peerConn.createOffer(setLocalAndSendMessage, createOfferFailed, mediaConstraints);
+    } else {
+        alert("Local stream not running yet - try again.");
+    }
+    }
+
+    // stop the connection upon user request
+    function hangUp() {
     console.log("Hang up.");    
     socket.json.send({type: "bye"});
     stop();
-  }
+    }
 
-  function stop() {
+    function stop() {
     peerConn.close();
     peerConn = null;
     started = false;    
-  }
+    }
 
-  // socket: channel connected
-  socket.on('connect', onChannelOpened)
+    // socket: channel connected
+    socket.on('connect', onChannelOpened)
         .on('message', onMessage);
 
-  function onChannelOpened(evt) {
+    function onChannelOpened(evt) {
     console.log('Channel opened.');
     channelReady = true;
-  }
+    }
 
-  function createAnswerFailed() {
+    function createAnswerFailed() {
     console.log("Create Answer failed");
-  }
-  // socket: accept connection request
-  function onMessage(evt) {
+    }
+    // socket: accept connection request
+    function onMessage(evt) {
     if (evt.type === 'offer') {
-      console.log("Received offer...")
-      if (!started) {
+        console.log("Received offer...")
+        if (!started) {
         createPeerConnection();
         started = true;
-      }
-      console.log('Creating remote session description...' );
-      peerConn.setRemoteDescription(new RTCSessionDescription(evt));
-      console.log('Sending answer...');
-      peerConn.createAnswer(setLocalAndSendMessage, createAnswerFailed, mediaConstraints);
+        }
+        console.log('Creating remote session description...' );
+        peerConn.setRemoteDescription(new RTCSessionDescription(evt));
+        console.log('Sending answer...');
+        peerConn.createAnswer(setLocalAndSendMessage, createAnswerFailed, mediaConstraints);
 
     } else if (evt.type === 'answer' && started) {
-      console.log('Received answer...');
-      console.log('Setting remote session description...' );
-      peerConn.setRemoteDescription(new RTCSessionDescription(evt));
+        console.log('Received answer...');
+        console.log('Setting remote session description...' );
+        peerConn.setRemoteDescription(new RTCSessionDescription(evt));
 
     } else if (evt.type === 'candidate' && started) {
-      console.log('Received ICE candidate...');
-      var candidate = new RTCIceCandidate({sdpMLineIndex:evt.sdpMLineIndex, sdpMid:evt.sdpMid, candidate:evt.candidate});
-      console.log(candidate);
-      peerConn.addIceCandidate(candidate);
+        console.log('Received ICE candidate...');
+        var candidate = new RTCIceCandidate({sdpMLineIndex:evt.sdpMLineIndex, sdpMid:evt.sdpMid, candidate:evt.candidate});
+        console.log(candidate);
+        peerConn.addIceCandidate(candidate);
 
     } else if (evt.type === 'bye' && started) {
-      console.log("Received bye");
-      stop();
+        console.log("Received bye");
+        stop();
     }
-  }
+    }
 
-  function createPeerConnection() {
+    function createPeerConnection() {
     console.log("Creating peer connection");
     RTCPeerConnection = webkitRTCPeerConnection || mozRTCPeerConnection;
-    var pc_config = {"iceServers":[]};
+    var pc_config = { "iceServers": [{ "url": "stun:stun.l.google.com:19302" }] };
     try {
-      peerConn = new RTCPeerConnection(pc_config);
+        peerConn = new RTCPeerConnection(pc_config);
     } catch (e) {
-      console.log("Failed to create PeerConnection, exception: " + e.message);
+        console.log("Failed to create PeerConnection, exception: " + e.message);
     }
     // send any ice candidates to the other peer
     peerConn.onicecandidate = function (evt) {
-      if (event.candidate) {
+        if (event.candidate) {
         console.log('Sending ICE candidate...');
         console.log(evt.candidate);
         socket.json.send({type: "candidate",
-                          sdpMLineIndex: evt.candidate.sdpMLineIndex,
-                          sdpMid: evt.candidate.sdpMid,
-                          candidate: evt.candidate.candidate});
-      } else {
+                            sdpMLineIndex: evt.candidate.sdpMLineIndex,
+                            sdpMid: evt.candidate.sdpMid,
+                            candidate: evt.candidate.candidate});
+        } else {
         console.log("End of candidates.");
-      }
+        }
     };
     console.log('Adding local stream...');
     peerConn.addStream(localStream);
@@ -173,16 +174,16 @@
 
     // when remote adds a stream, hand it on to the local video element
     function onRemoteStreamAdded(event) {
-      console.log("Added remote stream");
-      remotevid.src = window.URL.createObjectURL(event.stream);
+        console.log("Added remote stream");
+        remotevid.src = window.URL.createObjectURL(event.stream);
     }
 
     // when remote removes a stream, remove it from the local video element
     function onRemoteStreamRemoved(event) {
-      console.log("Remove remote stream");
-      remotevid.src = "";
+        console.log("Remove remote stream");
+        remotevid.src = "";
     }
-  }
+    }
   </script>
 
 
