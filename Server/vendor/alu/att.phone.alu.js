@@ -257,6 +257,7 @@
 
             var token = {};
 
+            /*
             if (att.config.accessToken) {
                 token = {
                     id: att.config.accessToken,
@@ -269,6 +270,13 @@
                     id: user.privateId,
                     key: user.key
                 }
+            }
+            */
+
+            // Hack for now since I don't have a working token...
+            token = {
+                id: "4692294725@private.att.net",
+                key: "4725tx",
             }
 
             var mediaOptions = {

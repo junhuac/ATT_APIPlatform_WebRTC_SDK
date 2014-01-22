@@ -47,6 +47,9 @@
                         user.number = (options && options.phone_number) ? options.phone_number : user.phone_number;
                         user.publicId = (options && options.publicId) ? options.publicId : '';
 
+                        // Hack since my account doesn't have a public id
+                        user.publicId = "sip:+14692294725@foundry.att.com";
+
                         cb(user);
                     },
                     error: function(err) {

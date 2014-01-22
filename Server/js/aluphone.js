@@ -7,10 +7,9 @@ $(document).ready(function() {
     function getOAuthUrl() {
         var oauth_server = "https://auth.tfoundry.com";
         var authorize_path = "/oauth/authorize";
-        var clientID = "ofanste7pmxbeviskmznuktmgt92n9sp";
+        var clientID = "c3gardsxw5nmq6p9cjwlzkwmidgapg10";
         var scope = 'profile,webrtc';
-        //var redirectURI = "http://work.localhost/att.js-kamal/att.js/examples/aluphone.html";
-        var redirectURI = "http://webtest.ic.att.com/att.js/examples/aluphone2.html";
+        var redirectURI = "http://localhost/webrtc/aluphone.html";
         return oauth_server + authorize_path + "?response_type=token&client_id=" +
                 clientID + "&scope=" + scope + "&redirect_uri=" + redirectURI;
     }
