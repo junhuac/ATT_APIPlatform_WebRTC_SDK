@@ -1,5 +1,5 @@
 window.defaultConfig = {
-    'redirect_uri': 'http://work.localhost/att.js-kamal/att.js/examples/aluphone_orig.html', 
-    'client_id': 'ulhnzsveuiijkdmm3v6lj5dm2khh4hk7',
+    'redirect_uri': 'http://localhost/webrtc/aluphone.html',
+    'client_id': 'c3gardsxw5nmq6p9cjwlzkwmidgapg10',
     'authorize_uri' : 'https://auth.tfoundry.com/oauth/authorize'
 };

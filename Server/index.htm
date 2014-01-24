@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
   <title>AT&T WebRTC SDK Sample App</title>  
-	<link rel="stylesheet" href="style/style.css" type="text/css" media="screen" />
-	<script type="text/javascript" src="lib/jquery.js"></script>
-	
-	<!-- Transport Library -->
-	<script type="text/javascript" src="lib/sip.js"></script>
-	
+    <link href="css/alu-webrtc.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+
+	<!-- AT&T WebRTC API -->
+    <script src="src/att.js"></script>
+    <script src="src/att.me.js"></script>
+    <script src="src/att.oauth2.js"></script>
+    <script src="src/att.phonenumber.js"></script>
+
 	<!-- Orca API -->
-	<script type="text/javascript" src="lib/orca.js"></script>
-	<script type="text/javascript" src="lib/orcaALU.js"></script>
-	
+    <script src="vendor/alu/orca.js"></script>
+    <script src="vendor/alu/orcaALU.js"></script>
+
+	<!-- Transport Library -->
+    <script src="vendor/alu/sip.js"></script>
+
 	<!-- Application Code -->
-	<script type="text/javascript" src="app/config.js"></script>
-	<script type="text/javascript" src="app/application.js"></script>
+    <script src="vendor/alu/att.phone.alu.js"></script>
+	
 </head>
+
 <body>
   <h1>AT&T WebRTC SDK Sample App</h1>
   <video id="webrtc-sourcevid" autoplay="" style="width: 320px; height: 240px; border: 1px solid black;"></video>

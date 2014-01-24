@@ -7,9 +7,9 @@ $(document).ready(function() {
     function getOAuthUrl() {
         var oauth_server = "https://auth.tfoundry.com";
         var authorize_path = "/oauth/authorize";
-        var clientID = "c3gardsxw5nmq6p9cjwlzkwmidgapg10";
+        var clientID = "1vggltqkbe5fa7ivszb41hpvncvlmeux";
         var scope = 'profile,webrtc';
-        var redirectURI = "http://localhost/webrtc/aluphone.html";
+        var redirectURI = "http://localhost/webrtc/aluphone2.html";
         return oauth_server + authorize_path + "?response_type=token&client_id=" +
                 clientID + "&scope=" + scope + "&redirect_uri=" + redirectURI;
     }
