@@ -8,10 +8,20 @@ Date: 01-17-2014
 This is a WebRTC gateway which implements features listed in AT&T WebRTC NB Spec.
 */
 
-// create the http server and listen on port
-var server = require('http').createServer();
-var app = server.listen(1337, function() {
-  console.log((new Date()) + " Server is listening on port 1337");
+// JavaScript source code for WebRTC NB REST services
+
+var restify = require('restify');
+
+function respond(req, res, next) {
+    res.send('hello ' + req.params.name);
+}
+
+var server = restify.createServer();
+server.get('/hello/:name', respond);
+server.head('/hello/:name', respond);
+
+var app = server.listen(1337, function () {
+    console.log((new Date()) + '%s listening at %s', server.name, server.url);
 });
 
 // create the socket server on the port
