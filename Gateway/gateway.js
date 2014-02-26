@@ -43,6 +43,11 @@ var maxAge = 60;
 var lastRequestId = 0;
 
 /**
+ * Global counter for unique session ids
+ */
+var lastSessionId = 0;
+
+/**
  * Helper function for compacting an array by removing
  * all null values. 
  *
@@ -231,6 +236,7 @@ server.use(restify.throttle({
 var connection_string = '127.0.0.1:27017/rtc';
 var db = mongojs(connection_string, ['rtc']);
 var users = db.collection("users");
+var sessions = db.collection("sessions");
 
 server.pre(function (req, res, next) {
     if (req.headers.authorization == null) {
@@ -274,7 +280,7 @@ function userid(req, res, next) {
 }
 
 // Deassociate Access Token with user id
-function deluserid(req, res, next) {
+function deleteuserid(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     users.remove({ userid: req.params.userid }, function (err, success) {
@@ -359,12 +365,81 @@ function postevents(req, res, next) {
     return next();
 }
 
+function createsession(req, res, next) {
+    var session = {};
+    session.sessionid = lastSessionId++;
+    session.authorization = req.headers.authorization;
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    sessions.save(session, function (err, success) {
+        console.log('Response success ' + success);
+        console.log('Response error ' + err);
+        if (success) {
+            console.log((new Date()) + ' User session: ' + JSON.stringify(session));
+            res.header("location", "RTC/v1/sessions/" + session.sessionid);
+            res.header("x-expires", 3600);
+            res.send(201, "");
+            return next();
+        } else {
+            return next(err);
+        }
+    });
+}
+
+function refreshsession(req, res, next) {
+    var session = {};
+    session.sessionid = req.params.sessionid;
+    session.authorization = req.headers.authorization;
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    sessions.find({ sessionid: session.sessionid, authorization: session.authorization }, function (err, success) {
+        console.log('Response success ' + success);
+        console.log('Response error ' + err);
+        if (success) {
+            res.header("x-expires", 3600);
+            res.send(204, "");
+            return next();
+        } else {
+            return next(err);
+        }
+    })
+}
+
+function endsession(req, res, next) {
+    var session = {};
+    session.sessionid = req.params.sessionid;
+    session.authorization = req.headers.authorization;
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    sessions.remove({ sessionid: session.sessionid, authorization: session.authorization }, function (err, success) {
+        if (success != null) {
+            console.log('Session ended: ' + session.sessionid);
+        } else {
+            console.log('Response error ' + err);
+        }
+        if (success) {
+            res.send(200, "");
+            return next();
+        } else {
+            return next(err);
+        }
+    })
+}
+// Associate Access Token with User Id
 server.post('RTC/v1/oauth/token', oauth);
 server.put('RTC/v1/userids/:userid', userid);
-server.del('RTC/v1/userids/:userid', deluserid);
+server.del('RTC/v1/userids/:userid', deleteuserid);
 server.get('RTC/v1/userids/', getuserids);
 
-/**
+// Session Management
+server.post('RTC/v1/sessions', createsession);
+server.put('RTC/v1/sessions/:sessionid', refreshsession);
+server.del('RTC/v1/sessions/:sessionid', endsession);
+
+/** 
  * GET handler for retrieving events for the user.
  * The username is required and the timestamp parameter
  * is optional.
