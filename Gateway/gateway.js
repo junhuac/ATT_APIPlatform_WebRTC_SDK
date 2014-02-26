@@ -11,14 +11,100 @@ This is a WebRTC gateway which implements features listed in AT&T WebRTC NB Spec
 // JavaScript source code for WebRTC NB REST services
 
 var restify = require('restify');
-
-function respond(req, res, next) {
-    res.send('hello ' + req.params.name);
-}
+var mongojs = require("mongojs");
 
 var server = restify.createServer();
-server.get('/hello/:name', respond);
-server.head('/hello/:name', respond);
+
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.dateParser());
+server.use(restify.queryParser());
+server.use(restify.bodyParser());
+server.use(restify.CORS());
+server.use(restify.throttle({
+    burst: 100,
+    rate: 50,
+    ip: true
+}));
+
+var connection_string = '127.0.0.1:27017/rtc';
+var db = mongojs(connection_string, ['rtc']);
+var users = db.collection("users");
+
+server.pre(function (req, res, next) {
+    if (req.headers.authorization == null) {
+        res.send(204, '');
+        return;
+    }
+
+    if (req.headers.accept != 'application/json' && req.headers.accept != 'application/xml')
+    {
+        res.send(204, '');
+        return;
+    }
+
+    return next();
+});
+
+function oauth(req, res, next) {
+    res.send(302, 'https://api.att.com/oauth/authorize?client_id=' + req.query.client_id + '&scope=RTC&redirect_uri=' + req.query.redirect_uri);
+}
+
+function userid(req, res, next) {
+    var user = {};
+    user.userid = req.params.userid;
+    user.authorization = req.headers.authorization;
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    users.save(user, function (err, success) {
+        console.log('Response success ' + success);
+        console.log('Response error ' + err);
+        if (success) {
+            console.log((new Date()) + ' User login: ' + JSON.stringify(user));
+            res.send(200, "");
+            return next();
+        } else {
+            return next(err);
+        }
+    });
+}
+
+function deluserid(req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    users.remove({ userid: req.params.userid }, function (err, success) {
+        console.log('Response success ' + success);
+        console.log('Response error ' + err);
+        if (success) {
+            res.send(204, "");
+            return next();
+        } else {
+            return next(err);
+        }
+    })
+}
+
+function getuserids(req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    users.find().limit(200).sort({ postedOn: -1 }, function (err, success) {
+        console.log('Response success ' + success);
+        console.log('Response error ' + err);
+        if (success) {
+            console.log((new Date()) + ' Users: ' + JSON.stringify(success));
+            res.send(200, success);
+            return next();
+        } else {
+            return next(err);
+        }
+
+    });
+}
+
+server.post('RTC/v1/oauth/token', oauth);
+server.put('RTC/v1/userids/:userid', userid);
+server.del('RTC/v1/userids/:userid', deluserid);
+server.get('RTC/v1/userids/', getuserids);
 
 var app = server.listen(1337, function () {
     console.log((new Date()) + '%s listening at %s', server.name, server.url);
